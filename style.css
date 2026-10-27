@@ -310,8 +310,8 @@
   padding: 10px 12px 10px !important;
   border-radius: 14px !important;
   border: 1px solid rgba(232, 83, 122, 0.34) !important;
-  /* 底层死色 + Whisper 电脑端渐变（chat.css 原值） */
-  background-color: #1c141e !important;
+  /* 底层死色 80% 不透明 + Whisper 电脑端渐变（chat.css 原值） */
+  background-color: rgba(28, 20, 30, 0.8) !important;
   background-image: linear-gradient(
     145deg,
     rgba(232, 83, 122, 0.17),
@@ -327,7 +327,7 @@
 }
 .sdc-cards .toy-lane-card.alt {
   border-color: rgba(168, 120, 220, 0.34) !important;
-  background-color: #1c141e !important;
+  background-color: rgba(28, 20, 30, 0.8) !important;
   background-image: linear-gradient(
     145deg,
     rgba(168, 120, 220, 0.15),
