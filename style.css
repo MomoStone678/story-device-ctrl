@@ -1,30 +1,37 @@
 /* Story Device Ctrl · 面板与卡片 */
 
 .sdc-fab {
-  margin-left: 0.35rem;
   border: none;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(36, 48, 68, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 999px;
-  width: 2.1rem;
-  height: 2.1rem;
-  font-size: 1.05rem;
-  cursor: pointer;
-  vertical-align: middle;
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1.2rem;
+  cursor: grab;
   line-height: 1;
-  transition: transform 0.15s ease, background 0.15s ease;
+  color: #f2f4f8;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .sdc-fab:hover {
   transform: scale(1.06);
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(48, 64, 88, 0.95);
 }
-.sdc-fab--fixed {
+.sdc-fab.is-dragging {
+  cursor: grabbing;
+  transform: scale(1.08);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+.sdc-fab--float {
   position: fixed;
-  right: 1rem;
-  bottom: 5.5rem;
-  z-index: 9000;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  z-index: 10040;
+  margin: 0;
 }
 
 #sdc-panel-root.sdc-open {
@@ -32,8 +39,23 @@
   inset: 0;
   z-index: 10050;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  box-sizing: border-box;
+  padding:
+    max(0.5rem, env(safe-area-inset-top, 0px))
+    max(0.5rem, env(safe-area-inset-right, 0px))
+    max(0.5rem, env(safe-area-inset-bottom, 0px))
+    max(0.5rem, env(safe-area-inset-left, 0px));
+  /* 避开手机浏览器顶栏/底栏不稳定高度 */
+  height: 100dvh;
+  max-height: 100dvh;
+}
+
+@media (min-width: 720px) {
+  #sdc-panel-root.sdc-open {
+    align-items: center;
+  }
 }
 
 .sdc-backdrop {
@@ -44,26 +66,46 @@
 
 .sdc-panel {
   position: relative;
-  width: min(420px, calc(100vw - 1.5rem));
-  max-height: min(78vh, 640px);
+  width: min(420px, 100%);
+  max-height: min(88dvh, 640px);
   overflow: auto;
-  border-radius: 18px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  border-radius: 18px 18px 12px 12px;
   padding: 0;
   color: #f2f4f8;
   background:
-    linear-gradient(160deg, rgba(36, 48, 68, 0.82), rgba(18, 24, 36, 0.88)),
+    linear-gradient(160deg, rgba(36, 48, 68, 0.92), rgba(18, 24, 36, 0.94)),
     radial-gradient(120% 80% at 0% 0%, rgba(90, 160, 200, 0.18), transparent 55%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   animation: sdc-in 0.22s ease;
+  z-index: 1;
+}
+
+@media (max-width: 719px) {
+  .sdc-panel {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 18px 18px 0 0;
+    max-height: min(88dvh, calc(100dvh - 1rem));
+    margin: 0;
+  }
+}
+
+@media (min-width: 720px) {
+  .sdc-panel {
+    border-radius: 18px;
+    width: min(420px, calc(100vw - 1.5rem));
+  }
 }
 
 @keyframes sdc-in {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.98);
+    transform: translateY(16px) scale(0.98);
   }
   to {
     opacity: 1;

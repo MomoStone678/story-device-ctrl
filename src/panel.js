@@ -1,6 +1,10 @@
 /**
- * QR 旁 Emoji → 半透明面板（R4 R5 R6 R7）
+ * 可拖动悬浮圆标 → 半透明面板（R4 R5 R6 R7）
+ * 不再挂快捷回复栏；手机弹窗贴底，避免顶到不可用区。
  */
+
+const FAB_POS_KEY = 'sdc-fab-pos';
+const DRAG_THRESHOLD_PX = 8;
 
 /**
  * @param {object} api
@@ -21,32 +25,144 @@ export function mountPanel(api) {
   ensureFab(emoji, () => openPanel(api));
 }
 
+function loadFabPos() {
+  try {
+    const raw = localStorage.getItem(FAB_POS_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (typeof p?.left === 'number' && typeof p?.top === 'number') return p;
+  } catch (_) {
+    /* ignore */
+  }
+  return null;
+}
+
+function saveFabPos(left, top) {
+  try {
+    localStorage.setItem(FAB_POS_KEY, JSON.stringify({ left, top }));
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+function clampFabPos(left, top, size) {
+  const pad = 8;
+  const vw = window.innerWidth || 320;
+  const vh = window.innerHeight || 480;
+  const maxL = Math.max(pad, vw - size - pad);
+  const maxT = Math.max(pad, vh - size - pad);
+  return {
+    left: Math.min(maxL, Math.max(pad, left)),
+    top: Math.min(maxT, Math.max(pad, top)),
+  };
+}
+
+function defaultFabPos(size) {
+  const vw = window.innerWidth || 320;
+  const vh = window.innerHeight || 480;
+  return clampFabPos(vw - size - 16, vh - size - 96, size);
+}
+
+function applyFabPos(fab, left, top) {
+  const size = fab.offsetWidth || 44;
+  const p = clampFabPos(left, top, size);
+  fab.style.left = `${p.left}px`;
+  fab.style.top = `${p.top}px`;
+  fab.style.right = 'auto';
+  fab.style.bottom = 'auto';
+  return p;
+}
+
 function ensureFab(emoji, onClick) {
-  if (document.getElementById('sdc-fab')) return;
-  const fab = document.createElement('button');
+  let fab = document.getElementById('sdc-fab');
+  if (fab) {
+    fab.textContent = emoji;
+    return;
+  }
+
+  fab = document.createElement('button');
   fab.id = 'sdc-fab';
   fab.type = 'button';
-  fab.className = 'sdc-fab';
-  fab.title = '剧情控设备';
+  fab.className = 'sdc-fab sdc-fab--float';
+  fab.title = '戏控台（可拖动）';
+  fab.setAttribute('aria-label', '戏控台');
   fab.textContent = emoji;
-  fab.addEventListener('click', onClick);
+  document.body.appendChild(fab);
 
-  const place = () => {
-    const bar = document.querySelector('#qr--bar') || document.querySelector('#send_form') || document.body;
-    if (!fab.isConnected) {
-      if (bar === document.body) {
-        fab.classList.add('sdc-fab--fixed');
-        bar.appendChild(fab);
-      } else {
-        bar.appendChild(fab);
-      }
+  const saved = loadFabPos();
+  const size = 44;
+  const startPos = saved || defaultFabPos(size);
+  requestAnimationFrame(() => applyFabPos(fab, startPos.left, startPos.top));
+
+  let dragging = false;
+  let moved = false;
+  let startX = 0;
+  let startY = 0;
+  let origL = 0;
+  let origT = 0;
+  let pointerId = null;
+
+  const onPointerDown = (e) => {
+    if (e.button != null && e.button !== 0) return;
+    pointerId = e.pointerId;
+    dragging = true;
+    moved = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = fab.getBoundingClientRect();
+    origL = rect.left;
+    origT = rect.top;
+    fab.classList.add('is-dragging');
+    try {
+      fab.setPointerCapture(pointerId);
+    } catch (_) {
+      /* ignore */
     }
+    e.preventDefault();
   };
-  place();
-  // QR 可能晚加载
-  const obs = new MutationObserver(() => place());
-  obs.observe(document.body, { childList: true, subtree: true });
-  setTimeout(() => obs.disconnect(), 15000);
+
+  const onPointerMove = (e) => {
+    if (!dragging || (pointerId != null && e.pointerId !== pointerId)) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (!moved && dx * dx + dy * dy < DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) return;
+    moved = true;
+    applyFabPos(fab, origL + dx, origT + dy);
+  };
+
+  const onPointerUp = (e) => {
+    if (!dragging || (pointerId != null && e.pointerId !== pointerId)) return;
+    dragging = false;
+    fab.classList.remove('is-dragging');
+    try {
+      fab.releasePointerCapture(pointerId);
+    } catch (_) {
+      /* ignore */
+    }
+    pointerId = null;
+    if (moved) {
+      const rect = fab.getBoundingClientRect();
+      const p = applyFabPos(fab, rect.left, rect.top);
+      saveFabPos(p.left, p.top);
+      return;
+    }
+    onClick();
+  };
+
+  fab.addEventListener('pointerdown', onPointerDown);
+  fab.addEventListener('pointermove', onPointerMove);
+  fab.addEventListener('pointerup', onPointerUp);
+  fab.addEventListener('pointercancel', onPointerUp);
+  // 避免系统长按菜单干扰拖动
+  fab.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  const onResize = () => {
+    const rect = fab.getBoundingClientRect();
+    const p = applyFabPos(fab, rect.left, rect.top);
+    saveFabPos(p.left, p.top);
+  };
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onResize);
 }
 
 function openPanel(api) {
@@ -66,10 +182,11 @@ function openPanel(api) {
   const panel = document.createElement('div');
   panel.className = 'sdc-panel';
   panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-modal', 'true');
 
   const header = document.createElement('div');
   header.className = 'sdc-panel__header';
-  header.innerHTML = `<span class="sdc-panel__title">剧情控设备</span>`;
+  header.innerHTML = `<span class="sdc-panel__title">戏控台</span>`;
   const btnClose = document.createElement('button');
   btnClose.type = 'button';
   btnClose.className = 'sdc-panel__close';
@@ -86,6 +203,16 @@ function openPanel(api) {
   panel.appendChild(body);
   root.appendChild(backdrop);
   root.appendChild(panel);
+
+  // 打开后滚到顶，避免手机上内容卡在可视区外
+  requestAnimationFrame(() => {
+    try {
+      panel.scrollTop = 0;
+      body.scrollTop = 0;
+    } catch (_) {
+      /* ignore */
+    }
+  });
 }
 
 export function closePanel() {
@@ -138,7 +265,7 @@ function renderBody(body, api) {
   const importBox = document.createElement('div');
   importBox.className = 'sdc-import';
   const ta = document.createElement('textarea');
-  ta.placeholder = '粘贴实验室导出的设备档案 JSON…';
+  ta.placeholder = '粘贴信道台导出的设备档案 JSON…';
   ta.rows = 5;
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
@@ -166,7 +293,7 @@ function renderBody(body, api) {
   if (!ids.length) {
     const empty = document.createElement('p');
     empty.className = 'sdc-muted';
-    empty.textContent = '还没有档案。先在实验室导出，再粘贴导入。';
+    empty.textContent = '还没有档案。先在信道台导出，再粘贴导入。';
     list.appendChild(empty);
   }
   for (const id of ids) {

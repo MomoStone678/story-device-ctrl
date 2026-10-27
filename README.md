@@ -1,4 +1,4 @@
-# 戏控台 · Story Device Ctrl
+﻿# 戏控台 · Story Device Ctrl
 
 SillyTavern 扩展（对外中文名 **戏控台**）。用网页蓝牙按 `[CTRL:…]` 驱动外接设备。
 

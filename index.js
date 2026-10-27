@@ -196,7 +196,7 @@ jQuery(async () => {
             <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
           </div>
           <div class="inline-drawer-content">
-            <p>主面板：点快捷回复一带的 Emoji（默认 📡）。</p>
+            <p>主面板：点屏幕上可拖动的 📡 圆标（位置会记住）。</p>
             <p>驱动在扩展内用网页蓝牙，不另开进程。</p>
           </div>
         </div>
