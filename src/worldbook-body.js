@@ -36,7 +36,8 @@ export function buildWorldbookBody(profile, meta = {}) {
     '  - 强度只允许 1～10（对齐实验室档）。禁止 0～100 百分比。',
     '  - 开控四段缺一不可：强度、开毫秒、空毫秒、总毫秒。禁止只写强度。',
     '  - 禁止演戏假遥控（写「已经打开了/在动了」却不输出 CTRL）。',
-    '  - 功能显示名必须从「可用功能」原文照抄。角色短名 = 当前 {{char}} 常用简称（无空格无冒号）；示例里的 Char 请换成该短名。',
+    '  - 功能显示名必须从「可用功能」原文照抄。角色短名无空格无冒号；示例里的 Char / Char2 请换成真实简称。',
+    '  - 双人/第二 AI：本轮里「先出现的短名」用粉卡，「第二个不同短名」用紫卡。两人同时控时必须用两个不同短名，不要都写成同一个。',
     '',
     '可用功能:',
     list,
@@ -51,6 +52,7 @@ export function buildWorldbookBody(profile, meta = {}) {
     '  - 空毫秒 = 每一拍真停空着的时间；0 = 连续开（仍必须写出 0）',
     '  - 总毫秒 = 本条总共持续多久；0 = 一直到 OFF/STOPALL（仍必须写出 0）',
     '  - 空毫秒>0：开 → 真停 → 空 → 再开……循环',
+    '  - 短名：第一角色 → 粉卡；第二角色/第二 AI → 紫卡（与 Whisper 双人配色一致）',
     '  - 禁止 HTML/硬件信道细节。',
     '',
     '强度参考（1～10）:',
@@ -68,16 +70,17 @@ export function buildWorldbookBody(profile, meta = {}) {
     '  短试：总毫秒 8000～20000；长段：总毫秒 0（直到 OFF）',
     '',
     'example:（每条回复只选一种情境输出一组，勿把下列示例整页照抄进同一轮）',
-    `  {{char}} 对 {{user}} 轻触同步： [CTRL:Char:${ex}:2:200:900:12000]`,
-    `  {{char}} 持续使用设备： [CTRL:Char:${ex}:5:200:0:0]`,
-    `  节奏加快： [CTRL:Char:${ex}:7:150:500:20000]`,
+    `  第一角色轻触： [CTRL:Char:${ex}:2:200:900:12000]`,
+    `  第一角色连续开： [CTRL:Char:${ex}:5:200:0:0]`,
+    `  第二角色/第二 AI（换短名 Char2 → 紫卡）： [CTRL:Char2:${ex}:4:180:800:15000]`,
+    `  双人同轮（粉+紫，紧挨一组）： [CTRL:Char:${ex}:5:200:700:0][CTRL:Char2:${ex2}:4:180:900:0]`,
     labels.length > 1
-      ? `  换到另一功能： [CTRL:Char:${ex2}:4:180:800:15000]`
+      ? `  第一角色换功能： [CTRL:Char:${ex2}:4:180:800:15000]`
       : `  加强： [CTRL:Char:${ex}:8:120:400:10000]`,
     labels.length > 2
-      ? `  同轮多功能（紧挨一组，只出一次）： [CTRL:Char:${ex}:4:200:700:0][CTRL:Char:${ex2}:3:180:900:0][CTRL:Char:${ex3}:3:160:1000:0]`
+      ? `  同角色多功能（紧挨一组）： [CTRL:Char:${ex}:4:200:700:0][CTRL:Char:${ex2}:3:180:900:0][CTRL:Char:${ex3}:3:160:1000:0]`
       : labels.length > 1
-        ? `  同轮两功能（紧挨一组）： [CTRL:Char:${ex}:4:200:700:0][CTRL:Char:${ex2}:3:180:900:0]`
+        ? `  同角色两功能： [CTRL:Char:${ex}:4:200:700:0][CTRL:Char:${ex2}:3:180:900:0]`
         : `  峰值短试： [CTRL:Char:${ex}:9:100:300:8000]`,
     `  停下该功能： [CTRL:Char:${ex}:OFF]`,
     '  全部停止： [CTRL:Char:STOPALL]',
@@ -100,7 +103,7 @@ function collectLabels(profile) {
   return labels;
 }
 
-export function worldbookCommentFor(displayName, profileId) {
+export function worldbookCommentFor(displayName) {
   const name = String(displayName || '').trim() || '设备档案';
-  return `SDC · ${name} · ${profileId}`;
+  return `戏控台 · ${name}`;
 }

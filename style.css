@@ -252,24 +252,27 @@
 }
 
 /*
- * 聊天卡片宿主 · 旧版能看见的挂法 + 轻度居中
- * （width:100% 曾把卡宽算成 0；空替换正则曾让字没了卡也不见）
+ * 聊天卡片：挂在本轮气泡底部；视觉对齐 Whisper 深色 toy-lane（自带深色岛，不跟酒馆主题）
  */
 .sdc-cards {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.4rem;
-  margin-top: 0.45rem;
+  margin-top: 0.55rem;
+  margin-bottom: 0.15rem;
   margin-left: auto;
   margin-right: auto;
   width: fit-content;
   max-width: 100%;
+  position: relative;
+  z-index: 1;
+  color-scheme: dark;
 }
 .sdc-ctrl-card__warn {
   font-size: 0.75rem;
-  opacity: 0.75;
-  margin: 0.25rem 0;
-  color: rgba(255, 182, 202, 0.85);
+  margin: 0.2rem 0;
+  color: #ffb6ca;
   max-width: 300px;
   text-align: center;
 }
@@ -277,63 +280,61 @@
   display: none !important;
 }
 
-/* —— 抄 Whisper toy-lane 扁卡外观 —— */
-.toy-lane-stack,
-.sdc-lane-stack {
+/* —— Whisper 深色 toy-lane（数值对齐 aion-chat/static/chat.css）—— */
+.sdc-cards .toy-lane-stack {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-  width: 300px;
-  max-width: min(300px, 100%);
-  margin-top: 6px;
+  align-items: center;
+  gap: 5px;
+  width: min(100%, 320px);
+  margin-top: 0;
+  align-self: center;
 }
-.sdc-lane-wrap {
+.sdc-cards .sdc-lane-wrap {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 6px;
-  width: 300px;
-  max-width: min(300px, 100%);
+  width: min(100%, 300px);
 }
-.toy-lane-card {
-  width: 300px;
-  max-width: 100%;
+.sdc-cards .toy-lane-card {
+  width: min(100%, 300px);
   box-sizing: border-box;
   padding: 7px 11px 8px;
   border-radius: 14px;
   border: 1px solid rgba(232, 83, 122, 0.34);
+  /* 底不透明度略抬高：在浅色气泡里仍像 Whisper 深色卡，不会发灰发透 */
   background: linear-gradient(
     145deg,
-    rgba(232, 83, 122, 0.17),
-    rgba(28, 20, 30, 0.55) 52%,
-    rgba(255, 255, 255, 0.03)
+    rgba(232, 83, 122, 0.28),
+    rgba(28, 20, 30, 0.94) 48%,
+    rgba(18, 14, 22, 0.96)
   );
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
   color: #ffb6ca;
 }
-.toy-lane-card.alt {
+.sdc-cards .toy-lane-card.alt {
   border-color: rgba(168, 120, 220, 0.34);
   background: linear-gradient(
     145deg,
-    rgba(168, 120, 220, 0.15),
-    rgba(28, 20, 30, 0.55) 52%,
-    rgba(255, 255, 255, 0.03)
+    rgba(168, 120, 220, 0.26),
+    rgba(28, 20, 30, 0.94) 48%,
+    rgba(18, 14, 22, 0.96)
   );
 }
-.toy-lane-who {
+.sdc-cards .toy-lane-who {
   display: flex;
   align-items: baseline;
   gap: 5px;
   flex-wrap: nowrap;
   min-width: 0;
 }
-.toy-lane-heart {
+.sdc-cards .toy-lane-heart {
   font-size: 13px;
   line-height: 1;
   flex: 0 0 auto;
 }
-.toy-lane-name {
+.sdc-cards .toy-lane-name {
   font-size: 13px;
   font-weight: 750;
   color: #ffc2d4;
@@ -343,10 +344,10 @@
   text-overflow: ellipsis;
   min-width: 0;
 }
-.toy-lane-card.alt .toy-lane-name {
+.sdc-cards .toy-lane-card.alt .toy-lane-name {
   color: #e2d0ff;
 }
-.toy-lane-role {
+.sdc-cards .toy-lane-role {
   font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0.07em;
@@ -354,10 +355,10 @@
   color: rgba(255, 182, 202, 0.5);
   flex: 0 0 auto;
 }
-.toy-lane-card.alt .toy-lane-role {
+.sdc-cards .toy-lane-card.alt .toy-lane-role {
   color: rgba(216, 192, 255, 0.5);
 }
-.toy-lane-detail {
+.sdc-cards .toy-lane-detail {
   margin-top: 4px;
   display: flex;
   align-items: center;
@@ -365,34 +366,34 @@
   gap: 4px 6px;
   min-width: 0;
 }
-.toy-lane-channel {
+.sdc-cards .toy-lane-channel {
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
-.toy-lane-card.thrust .toy-lane-channel {
+.sdc-cards .toy-lane-card.thrust .toy-lane-channel {
   color: #e8a07a;
 }
-.toy-lane-card.vibe .toy-lane-channel {
+.sdc-cards .toy-lane-card.vibe .toy-lane-channel {
   color: #e8c86a;
 }
-.toy-lane-card.suck .toy-lane-channel {
+.sdc-cards .toy-lane-card.suck .toy-lane-channel {
   color: #7ab8d4;
 }
-.toy-lane-card.special .toy-lane-channel {
+.sdc-cards .toy-lane-card.special .toy-lane-channel {
   color: #ffb6ca;
 }
-.toy-lane-mode {
+.sdc-cards .toy-lane-mode {
   font-size: 10.5px;
   letter-spacing: 0.04em;
   color: rgba(255, 182, 202, 0.68);
   text-transform: uppercase;
 }
-.toy-lane-card.alt .toy-lane-mode {
+.sdc-cards .toy-lane-card.alt .toy-lane-mode {
   color: rgba(216, 192, 255, 0.68);
 }
-.toy-lane-pct {
+.sdc-cards .toy-lane-pct {
   margin-left: auto;
   font-size: 12.5px;
   font-weight: 700;
@@ -400,13 +401,13 @@
   color: #ffe0ea;
   flex: 0 0 auto;
 }
-.toy-lane-card.alt .toy-lane-pct {
+.sdc-cards .toy-lane-card.alt .toy-lane-pct {
   color: #ebe0ff;
 }
-.toy-lane-pct-empty {
+.sdc-cards .toy-lane-pct-empty {
   opacity: 0.45;
 }
-.toy-lane-chip {
+.sdc-cards .toy-lane-chip {
   display: inline-flex;
   align-items: baseline;
   gap: 3px;
@@ -414,81 +415,98 @@
   border-radius: 999px;
   font-size: 10.5px;
   border: 1px solid rgba(232, 83, 122, 0.22);
-  background: rgba(0, 0, 0, 0.16);
+  background: rgba(0, 0, 0, 0.28);
   color: rgba(255, 182, 202, 0.78);
   line-height: 1.35;
 }
-.toy-lane-card.alt .toy-lane-chip {
+.sdc-cards .toy-lane-card.alt .toy-lane-chip {
   border-color: rgba(168, 120, 220, 0.22);
   color: rgba(216, 192, 255, 0.78);
 }
-.toy-lane-key {
+.sdc-cards .toy-lane-key {
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-size: 9px;
   opacity: 0.7;
 }
-.toy-lane-val {
+.sdc-cards .toy-lane-val {
   font-variant-numeric: tabular-nums;
   font-weight: 650;
   color: #ffe8f0;
   font-size: 10.5px;
 }
-.toy-lane-card.alt .toy-lane-val {
+.sdc-cards .toy-lane-card.alt .toy-lane-val {
   color: #f0e8ff;
 }
-.toy-lane-hold {
+.sdc-cards .toy-lane-hold {
   font-size: 10.5px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: rgba(255, 182, 202, 0.6);
 }
-.toy-lane-bar {
+.sdc-cards .toy-lane-bar {
   margin-top: 5px;
   height: 2px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
 }
-.toy-lane-bar > i {
+.sdc-cards .toy-lane-bar > i {
   display: block;
   height: 100%;
   border-radius: 999px;
 }
-.toy-lane-card.thrust .toy-lane-bar > i {
+.sdc-cards .toy-lane-card.thrust .toy-lane-bar > i {
   background: linear-gradient(90deg, rgba(232, 160, 122, 0.4), #e8a07a);
 }
-.toy-lane-card.vibe .toy-lane-bar > i {
+.sdc-cards .toy-lane-card.vibe .toy-lane-bar > i {
   background: linear-gradient(90deg, rgba(232, 200, 106, 0.35), #e8c86a);
 }
-.toy-lane-card.suck .toy-lane-bar > i {
+.sdc-cards .toy-lane-card.suck .toy-lane-bar > i {
   background: linear-gradient(90deg, rgba(122, 184, 212, 0.35), #7ab8d4);
 }
 
-/* 三按钮：贴扁卡风格 */
-.sdc-lane-actions {
+/* 三按钮：深色粉描边，避免浅色主题把字洗没 */
+.sdc-cards .sdc-lane-actions {
   display: flex;
   gap: 6px;
-  width: 300px;
-  max-width: 100%;
+  width: min(100%, 300px);
   justify-content: center;
 }
-.sdc-lane-btn {
+.sdc-cards .sdc-lane-btn {
   flex: 1;
   min-width: 0;
-  border: 1px solid rgba(232, 83, 122, 0.28);
-  border-radius: 999px;
-  background: rgba(232, 83, 122, 0.12);
-  color: #ffc2d4;
-  padding: 5px 8px;
-  font-size: 11px;
-  font-weight: 700;
+  border: 1px solid rgba(232, 83, 122, 0.4) !important;
+  border-radius: 999px !important;
+  background: rgba(40, 22, 32, 0.95) !important;
+  color: #ffc2d4 !important;
+  -webkit-text-fill-color: #ffc2d4 !important;
+  padding: 5px 8px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
   letter-spacing: 0.02em;
   cursor: pointer;
+  opacity: 1 !important;
+  box-shadow: none !important;
 }
-.sdc-lane-btn:hover {
-  background: rgba(232, 83, 122, 0.22);
+.sdc-cards .sdc-lane-btn:hover {
+  background: rgba(232, 83, 122, 0.28) !important;
+  color: #ffe0ea !important;
+  -webkit-text-fill-color: #ffe0ea !important;
+}
+
+/* 第二角色 / 第二 AI：紫卡 + 紫按钮（对齐 Whisper Connor 配色） */
+.sdc-cards .sdc-lane-wrap.is-alt .sdc-lane-btn {
+  border-color: rgba(168, 120, 220, 0.45) !important;
+  background: rgba(36, 24, 52, 0.95) !important;
+  color: #e2d0ff !important;
+  -webkit-text-fill-color: #e2d0ff !important;
+}
+.sdc-cards .sdc-lane-wrap.is-alt .sdc-lane-btn:hover {
+  background: rgba(168, 120, 220, 0.3) !important;
+  color: #f0e8ff !important;
+  -webkit-text-fill-color: #f0e8ff !important;
 }
 
 .story-device-ctrl-settings .inline-drawer-content p {

@@ -85,7 +85,7 @@ export async function setEnabled(id, enabled) {
   row.enabled = !!enabled;
   saveSettingsDebounced();
   try {
-    await setProfileWorldbookEnabled(id, row.enabled);
+    await setProfileWorldbookEnabled(id, row.enabled, row.worldbook);
   } catch (e) {
     console.warn(`[${EXTENSION_NAME}] toggle WI`, e);
   }

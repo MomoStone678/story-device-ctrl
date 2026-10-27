@@ -1,7 +1,8 @@
 /**
- * 聊天气泡下注入 CTRL 卡片（R3）
- * 逻辑对齐「旧版能看见卡」那版 + Intiface：事件 + 聊天区监听；显示层藏 [CTRL]
- * 外观仍用 Whisper 扁卡。
+ * 聊天气泡内底部注入 CTRL 卡片（R3）
+ * - 挂在本轮 .mes_text 最下面（不是浮窗）
+ * - 不完整 / 流式未完成：不出卡
+ * - 外观：对齐 Whisper 深色模式 toy-lane 扁卡（自带深色底，不跟酒馆主题走）
  */
 
 import { parseCtrlCommands, stripCtrlTags, isRunnableCtrl } from './ctrl-parse.js';
@@ -42,14 +43,15 @@ export function bindCtrlCards(deps) {
   eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, run);
   eventSource.on(event_types.USER_MESSAGE_RENDERED, run);
   eventSource.on(event_types.MESSAGE_UPDATED, run);
+  if (event_types.GENERATION_ENDED) {
+    eventSource.on(event_types.GENERATION_ENDED, scanTail);
+  }
 
-  // Intiface 同款：流式重绘会冲掉隐藏层/卡片，靠监听补回来
   const chatEl = document.getElementById('chat');
   if (chatEl) {
     let timer = null;
     const obs = new MutationObserver((mutations) => {
       if (busy) return;
-      // 忽略我们自己改卡片/隐藏层引起的抖动
       const selfOnly = mutations.every((m) => {
         const t = m.target;
         if (!(t instanceof Node)) return false;
@@ -58,7 +60,7 @@ export function bindCtrlCards(deps) {
       });
       if (selfOnly) return;
       clearTimeout(timer);
-      timer = setTimeout(scanTail, 60);
+      timer = setTimeout(scanTail, 80);
     });
     obs.observe(chatEl, { childList: true, subtree: true, characterData: true });
   }
@@ -71,18 +73,78 @@ export function bindCtrlCards(deps) {
   }
 }
 
+/** 还在吐字时先不挂卡，避免半截 CTRL 出空白卡 */
+function isStreamingNow() {
+  try {
+    const stop = document.getElementById('mes_stop');
+    if (stop) {
+      const st = window.getComputedStyle(stop);
+      if (st.display !== 'none' && st.visibility !== 'hidden' && stop.offsetParent !== null) {
+        return true;
+      }
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  return false;
+}
+
+/** 只保留可展示的完整命令（丢弃不完整 / 无效半截） */
+function displayableCmds(cmds) {
+  return (cmds || []).filter((cmd) => {
+    if (!cmd) return false;
+    if (cmd.stopAll || cmd.off) return true;
+    if (cmd.incomplete) return false;
+    return isRunnableCtrl(cmd);
+  });
+}
+
 function resolveCmds(mes, textEl) {
   let cmds = parseCtrlCommands(mes.mes);
-  // 正文里看得见命令但存档解析不到时，从气泡纯文本再抠一遍
   if (!cmds.length && textEl) {
     cmds = parseCtrlCommands(textEl.textContent || '');
   }
-  if (cmds.length) {
-    mes._sdcCmds = cmds;
-    return cmds;
+  const shown = displayableCmds(cmds);
+  if (shown.length) {
+    mes._sdcCmds = shown;
+    return shown;
   }
-  if (Array.isArray(mes._sdcCmds) && mes._sdcCmds.length) return mes._sdcCmds;
+  // 仍有解析结果但全是半截：不缓存半截，避免下次「默认出空白卡」
+  if (cmds.length && cmds.every((c) => c.incomplete)) {
+    return [];
+  }
+  if (Array.isArray(mes._sdcCmds) && mes._sdcCmds.length) {
+    return displayableCmds(mes._sdcCmds);
+  }
   return [];
+}
+
+function ensureCardHost(mesRoot, textEl) {
+  // 优先挂在本轮正文最底部；否则挂 mes_block 末尾
+  const parent = textEl || mesRoot;
+  let host = parent.querySelector(':scope > .sdc-cards');
+  if (!host && mesRoot) {
+    host = mesRoot.querySelector('.sdc-cards');
+    if (host && host.parentElement !== parent) {
+      host.remove();
+      host = null;
+    }
+  }
+  if (!host) {
+    host = document.createElement('div');
+    host.className = 'sdc-cards';
+    parent.appendChild(host);
+  } else if (host.parentElement !== parent) {
+    parent.appendChild(host);
+  }
+  return host;
+}
+
+function clearCardHosts(mesRoot, textEl) {
+  const roots = [textEl, mesRoot].filter(Boolean);
+  for (const r of roots) {
+    r.querySelectorAll('.sdc-cards').forEach((el) => el.remove());
+  }
 }
 
 function injectForMessage(mesId, deps) {
@@ -90,48 +152,49 @@ function injectForMessage(mesId, deps) {
   const mes = chat[mesId];
   if (!mes || typeof mes.mes !== 'string') return;
 
-  const root =
+  const mesRoot =
     document.querySelector(`#chat .mes[mesid="${mesId}"] .mes_block`) ||
     document.querySelector(`#chat .mes[mesid="${mesId}"]`);
-  if (!root) return;
+  if (!mesRoot) return;
 
-  const textEl = root.querySelector('.mes_text');
+  const textEl = mesRoot.querySelector('.mes_text');
+
+  // 流式输出中：只藏 CTRL 字，不建卡
+  if (isStreamingNow() && mesId === chat.length - 1) {
+    hideCtrlInMesText(textEl);
+    clearCardHosts(mesRoot, textEl);
+    return;
+  }
+
   const cmds = resolveCmds(mes, textEl);
-
-  let host = root.querySelector(':scope > .sdc-cards');
   if (!cmds.length) {
-    if (host) host.remove();
-    // 即使无卡，也尽量把露在正文的命令藏掉
+    clearCardHosts(mesRoot, textEl);
     hideCtrlInMesText(textEl);
     return;
   }
 
-  if (!host) {
-    host = document.createElement('div');
-    host.className = 'sdc-cards';
-    // 旧版：直接挂在 mes_block 末尾（验证过能看见）
-    root.appendChild(host);
-  }
-
-  // 重建扁卡
+  const host = ensureCardHost(mesRoot, textEl);
   host.innerHTML = '';
   const stack = document.createElement('div');
-  stack.className = 'toy-lane-stack sdc-lane-stack';
+  stack.className = 'toy-lane-stack';
   host.appendChild(stack);
 
   const enabled = new Set((deps.getEnabledLabels?.() || []).map((s) => s.toLowerCase()));
-  const seenActors = [];
-
-  /** 本条消息要自动开的开控（整批一次，避免逐条开把前一路掐掉） */
+  /** 本轮出现的角色短名顺序：第 1 个粉卡，第 2 个紫卡（对齐 Whisper 双人） */
+  const actorOrder = [];
   const autoOns = [];
 
   cmds.forEach((cmd, idx) => {
-    const actor = cmd.actor || 'Char';
-    if (!seenActors.includes(actor)) seenActors.push(actor);
-    const alt = seenActors.indexOf(actor) % 2 === 1;
+    const actor = String(cmd.actor || 'Char').trim() || 'Char';
+    if (!actorOrder.includes(actor)) actorOrder.push(actor);
+    const actorSlot = actorOrder.indexOf(actor);
+    // 0=第一角色粉，1=第二角色紫；再往后循环粉/紫
+    const alt = actorSlot % 2 === 1;
 
     const wrap = document.createElement('div');
-    wrap.className = 'sdc-lane-wrap';
+    wrap.className = 'sdc-lane-wrap' + (alt ? ' is-alt' : '');
+    wrap.dataset.sdcActor = actor;
+    wrap.dataset.sdcActorSlot = String(actorSlot);
     wrap.innerHTML = buildLaneCardHtml(cmd, { alt });
 
     const actions = document.createElement('div');
@@ -151,7 +214,6 @@ function injectForMessage(mesId, deps) {
         if (cmd.off) await deps.driver.stopFunction(cmd.fn);
         else if (!isRunnableCtrl(cmd)) toast('标记缺段，无法驱动', true);
         else {
-          // 单卡继续：只动本路，不掐其它路
           await deps.driver.setFunction(cmd.fn, {
             level: cmd.level,
             widthMs: cmd.widthMs,
@@ -175,13 +237,7 @@ function injectForMessage(mesId, deps) {
     actions.appendChild(btnDisc);
     wrap.appendChild(actions);
 
-    if (cmd.incomplete) {
-      const warn = document.createElement('div');
-      warn.className = 'sdc-ctrl-card__warn';
-      warn.textContent = '格式不完整：须带 强度:开毫秒:空毫秒:总毫秒';
-      wrap.insertBefore(warn, actions);
-    }
-    if (cmd.fn && enabled.size && !enabled.has(String(cmd.fn).toLowerCase()) && !cmd.stopAll) {
+    if (cmd.fn && enabled.size && !enabled.has(String(cmd.fn).toLowerCase()) && !cmd.stopAll && !cmd.off) {
       const warn = document.createElement('div');
       warn.className = 'sdc-ctrl-card__warn';
       warn.textContent = '该功能未在已启用档案中';
@@ -196,7 +252,6 @@ function injectForMessage(mesId, deps) {
     }
   });
 
-  // 整批自动执行一次（对齐「多路齐开」；勿逐条 click）
   if (autoOns.length && !mes._sdcBatchExecuted) {
     mes._sdcBatchExecuted = true;
     queueMicrotask(() => {
@@ -218,40 +273,46 @@ function injectForMessage(mesId, deps) {
     });
   }
 
-  // 旧版同款：在气泡 HTML 里包一层隐藏（每次都做，防酒馆重绘冲掉）
   hideCtrlInMesText(textEl);
   void stripCtrlTags;
 }
 
-/** 显示层藏 [CTRL:…]，不改聊天存档 */
 function hideCtrlInMesText(textEl) {
   if (!textEl) return;
   const CTRL_RE = /\[CTRL:[^\]]+\]/gi;
 
-  // 已包过的不要先拆再包（减少闪烁）；只处理还裸着的
   let html = textEl.innerHTML;
-  // 跳过已在 sdc-ctrl-hide 里的：用占位保护
   const kept = [];
   html = html.replace(/<span class="sdc-ctrl-hide">[\s\S]*?<\/span>/gi, (block) => {
     kept.push(block);
     return `\u0000SDC${kept.length - 1}\u0000`;
+  });
+  // 卡片宿主在 mes_text 内时，替换前先摘掉再塞回，避免被 HTML 重写冲掉
+  const hostKeep = [];
+  html = html.replace(/<div class="sdc-cards"[\s\S]*?<\/div>/gi, (block) => {
+    // 只保护最外层简单情况；复杂嵌套靠 ensureCardHost 重建
+    hostKeep.push(block);
+    return `\u0000SDCH${hostKeep.length - 1}\u0000`;
   });
 
   if (CTRL_RE.test(html)) {
     CTRL_RE.lastIndex = 0;
     html = html.replace(CTRL_RE, '<span class="sdc-ctrl-hide">$&</span>');
     html = html.replace(/\u0000SDC(\d+)\u0000/g, (_, i) => kept[Number(i)] || '');
+    html = html.replace(/\u0000SDCH(\d+)\u0000/g, (_, i) => hostKeep[Number(i)] || '');
     textEl.innerHTML = html;
     return;
   }
 
-  // HTML 对不上时扫文本节点（排除已在隐藏层内的）
+  html = html.replace(/\u0000SDC(\d+)\u0000/g, (_, i) => kept[Number(i)] || '');
+  html = html.replace(/\u0000SDCH(\d+)\u0000/g, (_, i) => hostKeep[Number(i)] || '');
+
   const walker = document.createTreeWalker(textEl, NodeFilter.SHOW_TEXT);
   const hits = [];
   let node;
   while ((node = walker.nextNode())) {
     if (!node.nodeValue || !/\[CTRL:[^\]]+\]/i.test(node.nodeValue)) continue;
-    if (node.parentElement?.closest?.('.sdc-ctrl-hide')) continue;
+    if (node.parentElement?.closest?.('.sdc-ctrl-hide, .sdc-cards')) continue;
     hits.push(node);
   }
   for (const textNode of hits) {
@@ -305,17 +366,17 @@ function buildLaneCardHtml(cmd, { alt }) {
   }
 
   const laneTone = pickLaneTone(cmd.fn);
-  const level = cmd.incomplete ? null : Number(cmd.level);
-  const barW = level != null ? Math.max(0, Math.min(100, level * 10)) : 0;
+  const level = Number(cmd.level);
+  const barW = Math.max(0, Math.min(100, level * 10));
   const gap = Number(cmd.gapMs);
-  const mode = !cmd.incomplete && gap === 0 ? 'Hold' : !cmd.incomplete ? 'Pulse' : '';
+  const mode = gap === 0 ? 'Hold' : 'Pulse';
 
   const details = [];
   details.push(`<span class="toy-lane-channel">${esc(cmd.fn || '?')}</span>`);
-  if (mode) details.push(`<span class="toy-lane-mode">${mode}</span>`);
+  details.push(`<span class="toy-lane-mode">${mode}</span>`);
   if (mode === 'Hold') {
     details.push('<span class="toy-lane-hold">continuous</span>');
-  } else if (!cmd.incomplete) {
+  } else {
     details.push(
       `<span class="toy-lane-chip"><span class="toy-lane-key">Width</span><span class="toy-lane-val">${esc(cmd.widthMs)}ms</span></span>`,
     );
@@ -323,22 +384,12 @@ function buildLaneCardHtml(cmd, { alt }) {
       `<span class="toy-lane-chip"><span class="toy-lane-key">Gap</span><span class="toy-lane-val">${esc(cmd.gapMs)}ms</span></span>`,
     );
   }
-  if (!cmd.incomplete && cmd.durationMs != null) {
+  if (cmd.durationMs != null) {
     const durLabel = Number(cmd.durationMs) === 0 ? '∞' : `${cmd.durationMs}ms`;
     details.push(
       `<span class="toy-lane-chip"><span class="toy-lane-key">Dur</span><span class="toy-lane-val">${esc(durLabel)}</span></span>`,
     );
   }
-
-  const pctHtml =
-    level != null
-      ? `<span class="toy-lane-pct">${esc(level)}/10</span>`
-      : '<span class="toy-lane-pct toy-lane-pct-empty">—</span>';
-
-  const barHtml =
-    level != null
-      ? `<div class="toy-lane-bar" aria-hidden="true"><i style="width:${barW}%"></i></div>`
-      : '';
 
   return (
     `<article class="toy-lane-card compact ${laneTone}${altCls}">` +
@@ -346,10 +397,10 @@ function buildLaneCardHtml(cmd, { alt }) {
     `<span class="toy-lane-heart" aria-hidden="true">${heart}</span>` +
     `<span class="toy-lane-name">${actor}</span>` +
     `<span class="toy-lane-role">control</span>` +
-    pctHtml +
+    `<span class="toy-lane-pct">${esc(level)}/10</span>` +
     `</div>` +
     `<div class="toy-lane-detail">${details.join('')}</div>` +
-    barHtml +
+    `<div class="toy-lane-bar" aria-hidden="true"><i style="width:${barW}%"></i></div>` +
     `</article>`
   );
 }
@@ -368,6 +419,7 @@ function mkBtn(label, fn) {
   b.textContent = label;
   b.addEventListener('click', (e) => {
     e.preventDefault();
+    e.stopPropagation();
     fn();
   });
   return b;
