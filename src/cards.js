@@ -2,7 +2,7 @@
  * 聊天气泡内底部注入 CTRL 卡片（R3）
  * - 挂在本轮 .mes_text 最下面（不是浮窗）
  * - 不完整 / 流式未完成：不出卡
- * - 外观：对齐 Whisper 深色模式 toy-lane 扁卡（自带深色底，不跟酒馆主题走）
+ * - 外观：Whisper 电脑端扁卡；死色底保证手机/电脑看起来一样
  */
 
 import { parseCtrlCommands, stripCtrlTags, isRunnableCtrl } from './ctrl-parse.js';
@@ -367,7 +367,9 @@ function buildLaneCardHtml(cmd, { alt }) {
 
   const laneTone = pickLaneTone(cmd.fn);
   const level = Number(cmd.level);
-  const barW = Math.max(0, Math.min(100, level * 10));
+  // Whisper 电脑端：右侧百分比（档×10）
+  const pct = Math.max(0, Math.min(100, Math.round(level * 10)));
+  const barW = pct;
   const gap = Number(cmd.gapMs);
   const mode = gap === 0 ? 'Hold' : 'Pulse';
 
@@ -384,6 +386,7 @@ function buildLaneCardHtml(cmd, { alt }) {
       `<span class="toy-lane-chip"><span class="toy-lane-key">Gap</span><span class="toy-lane-val">${esc(cmd.gapMs)}ms</span></span>`,
     );
   }
+  // 总时长也显示，避免卡片被压得过矮、信息不全
   if (cmd.durationMs != null) {
     const durLabel = Number(cmd.durationMs) === 0 ? '∞' : `${cmd.durationMs}ms`;
     details.push(
@@ -397,7 +400,7 @@ function buildLaneCardHtml(cmd, { alt }) {
     `<span class="toy-lane-heart" aria-hidden="true">${heart}</span>` +
     `<span class="toy-lane-name">${actor}</span>` +
     `<span class="toy-lane-role">control</span>` +
-    `<span class="toy-lane-pct">${esc(level)}/10</span>` +
+    `<span class="toy-lane-pct">${esc(pct)}%</span>` +
     `</div>` +
     `<div class="toy-lane-detail">${details.join('')}</div>` +
     `<div class="toy-lane-bar" aria-hidden="true"><i style="width:${barW}%"></i></div>` +

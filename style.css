@@ -252,27 +252,31 @@
 }
 
 /*
- * 聊天卡片：挂在本轮气泡底部；视觉对齐 Whisper 深色 toy-lane（自带深色岛，不跟酒馆主题）
+ * 聊天卡片：本轮气泡底
+ * 视觉 = Whisper「电脑端」小半透明扁卡；手机/电脑必须一样
+ * 做法：先铺死深色底(#1c141e，等同电脑深色聊天底)，再叠 Whisper 半透明渐变
+ * → 底下气泡无论深浅，透出来都一样，不会手机发灰、电脑正常
  */
 .sdc-cards {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.55rem;
-  margin-bottom: 0.15rem;
-  margin-left: auto;
-  margin-right: auto;
-  width: fit-content;
-  max-width: 100%;
-  position: relative;
-  z-index: 1;
-  color-scheme: dark;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  margin: 8px 0 4px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  position: relative !important;
+  z-index: 2 !important;
+  color-scheme: only dark;
+  isolation: isolate;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  box-sizing: border-box !important;
 }
 .sdc-ctrl-card__warn {
   font-size: 0.75rem;
   margin: 0.2rem 0;
-  color: #ffb6ca;
+  color: #ffb6ca !important;
   max-width: 300px;
   text-align: center;
 }
@@ -280,47 +284,56 @@
   display: none !important;
 }
 
-/* —— Whisper 深色 toy-lane（数值对齐 aion-chat/static/chat.css）—— */
 .sdc-cards .toy-lane-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  width: min(100%, 320px);
-  margin-top: 0;
-  align-self: center;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  width: 100% !important;
+  max-width: 320px !important;
+  margin: 0 auto !important;
+  align-self: center !important;
 }
 .sdc-cards .sdc-lane-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 6px;
-  width: min(100%, 300px);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+  width: 100% !important;
+  max-width: 320px !important;
 }
 .sdc-cards .toy-lane-card {
-  width: min(100%, 300px);
-  box-sizing: border-box;
-  padding: 7px 11px 8px;
-  border-radius: 14px;
-  border: 1px solid rgba(232, 83, 122, 0.34);
-  /* 底不透明度略抬高：在浅色气泡里仍像 Whisper 深色卡，不会发灰发透 */
-  background: linear-gradient(
+  width: 100% !important;
+  max-width: 320px !important;
+  min-height: 64px !important;
+  box-sizing: border-box !important;
+  padding: 10px 12px 10px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(232, 83, 122, 0.34) !important;
+  /* 底层死色 + Whisper 电脑端渐变（chat.css 原值） */
+  background-color: #1c141e !important;
+  background-image: linear-gradient(
     145deg,
-    rgba(232, 83, 122, 0.28),
-    rgba(28, 20, 30, 0.94) 48%,
-    rgba(18, 14, 22, 0.96)
-  );
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
-  color: #ffb6ca;
+    rgba(232, 83, 122, 0.17),
+    rgba(28, 20, 30, 0.55) 52%,
+    rgba(255, 255, 255, 0.03)
+  ) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18) !important;
+  color: #ffb6ca !important;
+  -webkit-text-fill-color: inherit;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
 }
 .sdc-cards .toy-lane-card.alt {
-  border-color: rgba(168, 120, 220, 0.34);
-  background: linear-gradient(
+  border-color: rgba(168, 120, 220, 0.34) !important;
+  background-color: #1c141e !important;
+  background-image: linear-gradient(
     145deg,
-    rgba(168, 120, 220, 0.26),
-    rgba(28, 20, 30, 0.94) 48%,
-    rgba(18, 14, 22, 0.96)
-  );
+    rgba(168, 120, 220, 0.15),
+    rgba(28, 20, 30, 0.55) 52%,
+    rgba(255, 255, 255, 0.03)
+  ) !important;
 }
 .sdc-cards .toy-lane-who {
   display: flex;
@@ -335,9 +348,10 @@
   flex: 0 0 auto;
 }
 .sdc-cards .toy-lane-name {
-  font-size: 13px;
-  font-weight: 750;
-  color: #ffc2d4;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  color: #ffc2d4 !important;
+  -webkit-text-fill-color: #ffc2d4 !important;
   letter-spacing: 0.01em;
   white-space: nowrap;
   overflow: hidden;
@@ -345,18 +359,21 @@
   min-width: 0;
 }
 .sdc-cards .toy-lane-card.alt .toy-lane-name {
-  color: #e2d0ff;
+  color: #e2d0ff !important;
+  -webkit-text-fill-color: #e2d0ff !important;
 }
 .sdc-cards .toy-lane-role {
-  font-size: 9.5px;
-  font-weight: 600;
+  font-size: 9.5px !important;
+  font-weight: 600 !important;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: rgba(255, 182, 202, 0.5);
+  color: rgba(255, 182, 202, 0.5) !important;
+  -webkit-text-fill-color: rgba(255, 182, 202, 0.5) !important;
   flex: 0 0 auto;
 }
 .sdc-cards .toy-lane-card.alt .toy-lane-role {
-  color: rgba(216, 192, 255, 0.5);
+  color: rgba(216, 192, 255, 0.5) !important;
+  -webkit-text-fill-color: rgba(216, 192, 255, 0.5) !important;
 }
 .sdc-cards .toy-lane-detail {
   margin-top: 4px;
@@ -373,36 +390,44 @@
   text-transform: uppercase;
 }
 .sdc-cards .toy-lane-card.thrust .toy-lane-channel {
-  color: #e8a07a;
+  color: #e8a07a !important;
+  -webkit-text-fill-color: #e8a07a !important;
 }
 .sdc-cards .toy-lane-card.vibe .toy-lane-channel {
-  color: #e8c86a;
+  color: #e8c86a !important;
+  -webkit-text-fill-color: #e8c86a !important;
 }
 .sdc-cards .toy-lane-card.suck .toy-lane-channel {
-  color: #7ab8d4;
+  color: #7ab8d4 !important;
+  -webkit-text-fill-color: #7ab8d4 !important;
 }
 .sdc-cards .toy-lane-card.special .toy-lane-channel {
-  color: #ffb6ca;
+  color: #ffb6ca !important;
+  -webkit-text-fill-color: #ffb6ca !important;
 }
 .sdc-cards .toy-lane-mode {
-  font-size: 10.5px;
+  font-size: 10.5px !important;
   letter-spacing: 0.04em;
-  color: rgba(255, 182, 202, 0.68);
+  color: rgba(255, 182, 202, 0.68) !important;
+  -webkit-text-fill-color: rgba(255, 182, 202, 0.68) !important;
   text-transform: uppercase;
 }
 .sdc-cards .toy-lane-card.alt .toy-lane-mode {
-  color: rgba(216, 192, 255, 0.68);
+  color: rgba(216, 192, 255, 0.68) !important;
+  -webkit-text-fill-color: rgba(216, 192, 255, 0.68) !important;
 }
 .sdc-cards .toy-lane-pct {
   margin-left: auto;
-  font-size: 12.5px;
-  font-weight: 700;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
   font-variant-numeric: tabular-nums;
-  color: #ffe0ea;
+  color: #ffe0ea !important;
+  -webkit-text-fill-color: #ffe0ea !important;
   flex: 0 0 auto;
 }
 .sdc-cards .toy-lane-card.alt .toy-lane-pct {
-  color: #ebe0ff;
+  color: #ebe0ff !important;
+  -webkit-text-fill-color: #ebe0ff !important;
 }
 .sdc-cards .toy-lane-pct-empty {
   opacity: 0.45;
@@ -467,19 +492,22 @@
   background: linear-gradient(90deg, rgba(122, 184, 212, 0.35), #7ab8d4);
 }
 
-/* 三按钮：深色粉描边，避免浅色主题把字洗没 */
+/* 三按钮：与卡同系；强制色，防手机主题改字色 */
 .sdc-cards .sdc-lane-actions {
-  display: flex;
-  gap: 6px;
-  width: min(100%, 300px);
-  justify-content: center;
+  display: flex !important;
+  gap: 6px !important;
+  width: 100% !important;
+  max-width: 320px !important;
+  justify-content: center !important;
 }
 .sdc-cards .sdc-lane-btn {
-  flex: 1;
-  min-width: 0;
-  border: 1px solid rgba(232, 83, 122, 0.4) !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+  border: 1px solid rgba(232, 83, 122, 0.28) !important;
   border-radius: 999px !important;
-  background: rgba(40, 22, 32, 0.95) !important;
+  background-color: #1c141e !important;
+  background-image: none !important;
+  background: #1c141e linear-gradient(180deg, rgba(232, 83, 122, 0.14), rgba(28, 20, 30, 0.35)) !important;
   color: #ffc2d4 !important;
   -webkit-text-fill-color: #ffc2d4 !important;
   padding: 5px 8px !important;
@@ -489,25 +517,26 @@
   cursor: pointer;
   opacity: 1 !important;
   box-shadow: none !important;
+  filter: none !important;
 }
 .sdc-cards .sdc-lane-btn:hover {
-  background: rgba(232, 83, 122, 0.28) !important;
+  background: rgba(232, 83, 122, 0.22) !important;
   color: #ffe0ea !important;
   -webkit-text-fill-color: #ffe0ea !important;
 }
 
-/* 第二角色 / 第二 AI：紫卡 + 紫按钮（对齐 Whisper Connor 配色） */
 .sdc-cards .sdc-lane-wrap.is-alt .sdc-lane-btn {
-  border-color: rgba(168, 120, 220, 0.45) !important;
-  background: rgba(36, 24, 52, 0.95) !important;
+  border-color: rgba(168, 120, 220, 0.28) !important;
+  background: #1c141e linear-gradient(180deg, rgba(168, 120, 220, 0.14), rgba(28, 20, 30, 0.35)) !important;
   color: #e2d0ff !important;
   -webkit-text-fill-color: #e2d0ff !important;
 }
 .sdc-cards .sdc-lane-wrap.is-alt .sdc-lane-btn:hover {
-  background: rgba(168, 120, 220, 0.3) !important;
+  background: rgba(168, 120, 220, 0.22) !important;
   color: #f0e8ff !important;
   -webkit-text-fill-color: #f0e8ff !important;
 }
+
 
 .story-device-ctrl-settings .inline-drawer-content p {
   margin: 0.4em 0;

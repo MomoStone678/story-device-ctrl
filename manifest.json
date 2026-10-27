@@ -6,7 +6,7 @@
   "js": "index.js",
   "css": "style.css",
   "author": "story-device-ctrl",
-    "version": "0.2.8",
+    "version": "0.2.12",
   "homePage": "",
   "description": "戏控台 · 剧情演绎时按 [CTRL] 用网页蓝牙驱动外接设备（无需另开桥进程）。Story Device Ctrl."
 }
