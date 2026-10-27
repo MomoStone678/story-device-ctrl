@@ -3,6 +3,8 @@
  * 不再挂快捷回复栏；手机弹窗贴底，避免顶到不可用区。
  */
 
+import { explainBluetoothBlocker } from './driver.js';
+
 const FAB_POS_KEY = 'sdc-fab-pos';
 const DRAG_THRESHOLD_PX = 8;
 
@@ -234,6 +236,14 @@ function renderBody(body, api) {
     ? `已连接 · 当前档案 ${st.currentId || '—'}`
     : `未连接 · 状态 ${st.status}`;
   body.appendChild(status);
+
+  const bleHint = explainBluetoothBlocker();
+  if (bleHint && !st.connected) {
+    const tip = document.createElement('div');
+    tip.className = 'sdc-hint';
+    tip.textContent = bleHint;
+    body.appendChild(tip);
+  }
 
   const actions = document.createElement('div');
   actions.className = 'sdc-row';

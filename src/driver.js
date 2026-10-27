@@ -25,6 +25,38 @@ function sleep(ms, timers) {
   return new Promise((r) => timers.setTimeout(r, ms));
 }
 
+/** 面板/连接前：当前页能不能弹网页蓝牙列表（大白话） */
+export function explainBluetoothBlocker(bt = typeof navigator !== 'undefined' ? navigator.bluetooth : null) {
+  if (typeof window !== 'undefined' && window.isSecureContext === false) {
+    return (
+      '当前网页地址不算「安全环境」，Chrome 不会弹出蓝牙设备列表。' +
+      '常见原因：手机用 http://电脑IP:端口 打开酒馆。' +
+      '可行办法：①酒馆装在手机 Termux，用 Chrome 打开 http://127.0.0.1:端口；' +
+      '②或手机 Chrome 打开 chrome://flags ，搜索 Insecure origins treated as secure，' +
+      '填入你的酒馆地址（如 http://192.168.1.8:8000），改成 Enabled，重启 Chrome 再试。'
+    );
+  }
+  if (!bt || typeof bt.requestDevice !== 'function') {
+    return '当前浏览器不支持网页蓝牙。请用安卓 Chrome（多数苹果浏览器不行）。';
+  }
+  return '';
+}
+
+function humanizeBluetoothError(e) {
+  const raw = e?.message || String(e || '');
+  const name = e?.name || '';
+  if (name === 'NotFoundError' || /no device/i.test(raw)) {
+    return '没有选到设备（或列表是空的）。请确认设备已开机、已退出官方 App，并靠近手机。';
+  }
+  if (name === 'SecurityError' || /secure|https|ssl/i.test(raw)) {
+    return explainBluetoothBlocker() || raw;
+  }
+  if (name === 'NotAllowedError' || /permission|user cancelled|canceled/i.test(raw)) {
+    return '没有拿到蓝牙权限，或点了取消。请允许附近设备/蓝牙权限后再连。';
+  }
+  return raw || '连接失败';
+}
+
 function emptyRun() {
   return {
     timer: null,
@@ -145,12 +177,23 @@ export class StoryDeviceBleDriver {
     if (!this._currentId) throw new Error('未选择当前档案');
     const profile = this.currentProfile;
     if (!profile) throw new Error('当前档案无效');
-    if (!this._bt || typeof this._bt.requestDevice !== 'function') {
-      throw new Error('当前环境不支持网页蓝牙（请用 Chrome，且无外置桥）');
+
+    const block = explainBluetoothBlocker(this._bt);
+    if (block) {
+      this._status = 'error';
+      this._lastError = block;
+      throw new Error(block);
     }
+
     this._status = 'connecting';
     this._lastError = '';
     try {
+      if (typeof this._bt.getAvailability === 'function') {
+        const ok = await this._bt.getAvailability().catch(() => true);
+        if (ok === false) {
+          throw new Error('系统蓝牙好像关着。请打开手机蓝牙后再点连接。');
+        }
+      }
       const optionalServices = collectOptionalServices(profile);
       this._device = await this._bt.requestDevice({
         acceptAllDevices: true,
@@ -165,10 +208,11 @@ export class StoryDeviceBleDriver {
       this._log('已连接 GATT');
     } catch (e) {
       this._status = 'error';
-      this._lastError = e?.message || String(e);
+      const msg = humanizeBluetoothError(e);
+      this._lastError = msg;
       this._server = null;
       this._device = null;
-      throw e;
+      throw new Error(msg);
     }
   }
 

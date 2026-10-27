@@ -74,6 +74,7 @@
   border-radius: 18px 18px 12px 12px;
   padding: 0;
   color: #f2f4f8;
+  color-scheme: dark;
   background:
     linear-gradient(160deg, rgba(36, 48, 68, 0.92), rgba(18, 24, 36, 0.94)),
     radial-gradient(120% 80% at 0% 0%, rgba(90, 160, 200, 0.18), transparent 55%);
@@ -185,20 +186,43 @@
 
 .sdc-import textarea,
 .sdc-import input,
-.sdc-name {
+.sdc-name,
+.sdc-panel input,
+.sdc-panel textarea {
   width: 100%;
   box-sizing: border-box;
   margin: 0.25rem 0;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(0, 0, 0, 0.25);
-  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(8, 12, 20, 0.92);
+  color: #f5f7fb;
+  -webkit-text-fill-color: #f5f7fb;
+  caret-color: #f5f7fb;
   padding: 0.45rem 0.6rem;
   font: inherit;
+  opacity: 1;
+}
+.sdc-import textarea::placeholder,
+.sdc-import input::placeholder,
+.sdc-name::placeholder,
+.sdc-panel input::placeholder,
+.sdc-panel textarea::placeholder {
+  color: rgba(220, 228, 240, 0.55);
+  -webkit-text-fill-color: rgba(220, 228, 240, 0.55);
+  opacity: 1;
 }
 .sdc-import textarea {
   resize: vertical;
   min-height: 5rem;
+}
+.sdc-hint {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #ffd59a;
+  background: rgba(80, 50, 10, 0.45);
+  border: 1px solid rgba(255, 190, 100, 0.35);
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
 }
 
 .sdc-list {
