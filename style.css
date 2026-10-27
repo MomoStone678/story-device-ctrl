@@ -1,0 +1,431 @@
+/* Story Device Ctrl · 面板与卡片 */
+
+.sdc-fab {
+  margin-left: 0.35rem;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 999px;
+  width: 2.1rem;
+  height: 2.1rem;
+  font-size: 1.05rem;
+  cursor: pointer;
+  vertical-align: middle;
+  line-height: 1;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.sdc-fab:hover {
+  transform: scale(1.06);
+  background: rgba(255, 255, 255, 0.22);
+}
+.sdc-fab--fixed {
+  position: fixed;
+  right: 1rem;
+  bottom: 5.5rem;
+  z-index: 9000;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+#sdc-panel-root.sdc-open {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sdc-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 16, 24, 0.45);
+}
+
+.sdc-panel {
+  position: relative;
+  width: min(420px, calc(100vw - 1.5rem));
+  max-height: min(78vh, 640px);
+  overflow: auto;
+  border-radius: 18px;
+  padding: 0;
+  color: #f2f4f8;
+  background:
+    linear-gradient(160deg, rgba(36, 48, 68, 0.82), rgba(18, 24, 36, 0.88)),
+    radial-gradient(120% 80% at 0% 0%, rgba(90, 160, 200, 0.18), transparent 55%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  animation: sdc-in 0.22s ease;
+}
+
+@keyframes sdc-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.sdc-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem 0.5rem;
+  position: sticky;
+  top: 0;
+  background: inherit;
+  z-index: 1;
+}
+.sdc-panel__title {
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+.sdc-panel__close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.75;
+  padding: 0 0.25rem;
+}
+.sdc-panel__close:hover {
+  opacity: 1;
+}
+
+.sdc-panel__body {
+  padding: 0.25rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sdc-status {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+.sdc-muted {
+  opacity: 0.65;
+  font-size: 0.9rem;
+}
+
+.sdc-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.sdc-btn {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  border-radius: 10px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.sdc-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.sdc-btn--danger {
+  border-color: rgba(255, 120, 120, 0.35);
+}
+.sdc-btn--small {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
+}
+
+.sdc-import textarea,
+.sdc-import input,
+.sdc-name {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0.25rem 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+}
+.sdc-import textarea {
+  resize: vertical;
+  min-height: 5rem;
+}
+
+.sdc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.sdc-card-row {
+  border-radius: 12px;
+  padding: 0.55rem 0.65rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.sdc-card-row.is-current {
+  border-color: rgba(120, 190, 220, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(120, 190, 220, 0.2);
+}
+.sdc-card-row__top {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.35rem;
+}
+.sdc-card-row__top .sdc-name {
+  margin: 0;
+  flex: 1;
+}
+
+/*
+ * 聊天卡片宿主 · 旧版能看见的挂法 + 轻度居中
+ * （width:100% 曾把卡宽算成 0；空替换正则曾让字没了卡也不见）
+ */
+.sdc-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
+  max-width: 100%;
+}
+.sdc-ctrl-card__warn {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  margin: 0.25rem 0;
+  color: rgba(255, 182, 202, 0.85);
+  max-width: 300px;
+  text-align: center;
+}
+.sdc-ctrl-hide {
+  display: none !important;
+}
+
+/* —— 抄 Whisper toy-lane 扁卡外观 —— */
+.toy-lane-stack,
+.sdc-lane-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 300px;
+  max-width: min(300px, 100%);
+  margin-top: 6px;
+}
+.sdc-lane-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 300px;
+  max-width: min(300px, 100%);
+}
+.toy-lane-card {
+  width: 300px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 7px 11px 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(232, 83, 122, 0.34);
+  background: linear-gradient(
+    145deg,
+    rgba(232, 83, 122, 0.17),
+    rgba(28, 20, 30, 0.55) 52%,
+    rgba(255, 255, 255, 0.03)
+  );
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  color: #ffb6ca;
+}
+.toy-lane-card.alt {
+  border-color: rgba(168, 120, 220, 0.34);
+  background: linear-gradient(
+    145deg,
+    rgba(168, 120, 220, 0.15),
+    rgba(28, 20, 30, 0.55) 52%,
+    rgba(255, 255, 255, 0.03)
+  );
+}
+.toy-lane-who {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.toy-lane-heart {
+  font-size: 13px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+.toy-lane-name {
+  font-size: 13px;
+  font-weight: 750;
+  color: #ffc2d4;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.toy-lane-card.alt .toy-lane-name {
+  color: #e2d0ff;
+}
+.toy-lane-role {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(255, 182, 202, 0.5);
+  flex: 0 0 auto;
+}
+.toy-lane-card.alt .toy-lane-role {
+  color: rgba(216, 192, 255, 0.5);
+}
+.toy-lane-detail {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
+}
+.toy-lane-channel {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.toy-lane-card.thrust .toy-lane-channel {
+  color: #e8a07a;
+}
+.toy-lane-card.vibe .toy-lane-channel {
+  color: #e8c86a;
+}
+.toy-lane-card.suck .toy-lane-channel {
+  color: #7ab8d4;
+}
+.toy-lane-card.special .toy-lane-channel {
+  color: #ffb6ca;
+}
+.toy-lane-mode {
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: rgba(255, 182, 202, 0.68);
+  text-transform: uppercase;
+}
+.toy-lane-card.alt .toy-lane-mode {
+  color: rgba(216, 192, 255, 0.68);
+}
+.toy-lane-pct {
+  margin-left: auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #ffe0ea;
+  flex: 0 0 auto;
+}
+.toy-lane-card.alt .toy-lane-pct {
+  color: #ebe0ff;
+}
+.toy-lane-pct-empty {
+  opacity: 0.45;
+}
+.toy-lane-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  border: 1px solid rgba(232, 83, 122, 0.22);
+  background: rgba(0, 0, 0, 0.16);
+  color: rgba(255, 182, 202, 0.78);
+  line-height: 1.35;
+}
+.toy-lane-card.alt .toy-lane-chip {
+  border-color: rgba(168, 120, 220, 0.22);
+  color: rgba(216, 192, 255, 0.78);
+}
+.toy-lane-key {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 9px;
+  opacity: 0.7;
+}
+.toy-lane-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: #ffe8f0;
+  font-size: 10.5px;
+}
+.toy-lane-card.alt .toy-lane-val {
+  color: #f0e8ff;
+}
+.toy-lane-hold {
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 182, 202, 0.6);
+}
+.toy-lane-bar {
+  margin-top: 5px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.toy-lane-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+.toy-lane-card.thrust .toy-lane-bar > i {
+  background: linear-gradient(90deg, rgba(232, 160, 122, 0.4), #e8a07a);
+}
+.toy-lane-card.vibe .toy-lane-bar > i {
+  background: linear-gradient(90deg, rgba(232, 200, 106, 0.35), #e8c86a);
+}
+.toy-lane-card.suck .toy-lane-bar > i {
+  background: linear-gradient(90deg, rgba(122, 184, 212, 0.35), #7ab8d4);
+}
+
+/* 三按钮：贴扁卡风格 */
+.sdc-lane-actions {
+  display: flex;
+  gap: 6px;
+  width: 300px;
+  max-width: 100%;
+  justify-content: center;
+}
+.sdc-lane-btn {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgba(232, 83, 122, 0.28);
+  border-radius: 999px;
+  background: rgba(232, 83, 122, 0.12);
+  color: #ffc2d4;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+.sdc-lane-btn:hover {
+  background: rgba(232, 83, 122, 0.22);
+}
+
+.story-device-ctrl-settings .inline-drawer-content p {
+  margin: 0.4em 0;
+  opacity: 0.9;
+}
